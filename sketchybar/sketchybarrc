@@ -1,0 +1,152 @@
+# This is a demo config to showcase some of the most important commands.
+# It is meant to be changed and configured, as it is intentionally kept sparse.
+# For a (much) more advanced configuration example see my dotfiles:
+# https://github.com/FelixKratz/dotfiles
+
+#/usr/bin/lua ./init.lua
+
+PLUGIN_DIR="$CONFIG_DIR/plugins"
+
+##### Bar Appearance #####
+# Configuring the general appearance of the bar.
+# These are only some of the options available. For all options see:
+# https://felixkratz.github.io/SketchyBar/config/bar
+# If you are looking for other colors, see the color picker:
+# https://felixkratz.github.io/SketchyBar/config/tricks#color-picker
+
+background_color=0x00181926
+
+sketchybar --bar position=top topmost=window height=30 blur_radius=30 color=$background_color margin=12 y_offset=14 corner_radius=7 0
+
+
+default_background_color=0xcf24273a
+default_white=0xffcad3f5
+default_border=0xffb7bdf8
+
+##### Changing Defaults #####
+# We now change some default values, which are applied to all further items.
+# For a full list of all available item properties see:
+# https://felixkratz.github.io/SketchyBar/config/items
+
+default=(
+  padding_left=5
+  padding_right=5
+  icon.font="SF Pro:Bold:15.0"
+  label.font="SF Mono:Bold:13.5"
+  icon.color=$default_white
+  label.color=$default_white
+  background.corner_radius=10
+  icon.padding_left=4
+  icon.padding_right=4
+  label.padding_left=4
+  label.padding_right=4
+)
+sketchybar --default "${default[@]}"
+
+##### Adding Mission Control Space Indicators #####
+# Let's add some mission control spaces:
+# https://felixkratz.github.io/SketchyBar/config/components#space----associate-mission-control-spaces-with-an-item
+# to indicate active and available mission control spaces.
+
+sketchybar --add item macosicon left \
+           --set macosicon icon= label.drawing=off click_script="open /System/Applications/System\ Settings.app" \
+           padding_left=-10 background.color=$default_background_color background.height=30 \
+           icon.padding_right=10 icon.padding_left=10\
+            background.border_width=2 background.border_color=$default_border
+
+##### Adding Left Items #####
+# We add some regular items to the left side of the bar, where
+# only the properties deviating from the current defaults need to be set
+
+# E V E N T S
+sketchybar -m --add event window_focus \
+              --add event title_change
+
+
+# sketchybar --add item browser left \
+#            --set browser icon=􀎬 color=$default_white click_script="open /Applications/Firefox.app" label.drawing=off \
+#            --add item openvpn left \
+#            --set openvpn icon=󰌿 color=$default_white click_script="open /Applications/OpenVPN\ Connect.app" label.drawing=off \
+#            --add item telegram left \
+#            --set telegram icon= color=$default_white click_script="open /Applications/Telegram\ Lite.app" label.drawing=off \
+#            --add item terminal-kitty left \
+#            --set terminal-kitty icon=󰄛 color=$default_white click_script="kitty --single-instance --instance-group jonhef" label.drawing=off
+
+sketchybar --add item front_app left \
+           --set front_app icon.drawing=off script="$PLUGIN_DIR/window_title.sh" \
+                           background.color=$default_background_color \
+                           background.height=30 \
+                           background.border_color=$default_border background.border_width=2\
+           --subscribe front_app front_app_switched space_change window_focus title_change
+
+
+sketchybar --add bracket apps browser openvpn telegram terminal-kitty \
+           --set apps background.color=$default_background_color background.height=30 \
+           background.border_width=2 background.border_color=$default_border
+
+sketchybar --add bracket left sfl-bracket macosicon front_app
+           --set left background.color=$default_background_color background.height=30 \
+
+##### Adding Right Items #####
+# In the same way as the left items we can add items to the right side.
+# Additional position (e.g. center) are available, see:
+# https://felixkratz.github.io/SketchyBar/config/items#adding-items-to-sketchybar
+
+# Some items refresh on a fixed cycle, e.g. the clock runs its script once
+# every 10s. Other items respond to events they subscribe to, e.g. the
+# volume.sh script is only executed once an actual change in system audio
+# volume is registered. More info about the event system can be found here:
+# https://felixkratz.github.io/SketchyBar/config/events
+
+sketchybar --add item clock right \
+           --set clock update_freq=10 script="$PLUGIN_DIR/clock.sh" click_script="open /System/Applications/Calendar.app/"\
+                       background.color=$default_background_color \
+                       background.height=30 \
+                       label.padding_right=10 \
+                       padding_right=-15 background.border_color=$default_border background.border_width=2 \
+           --add item volume right \
+           --set volume script="$PLUGIN_DIR/volume.sh" background.color=$default_background_color \
+           background.border_width=2 background.border_color=$default_border \
+           background.height=30 \
+           --subscribe volume volume_change \
+           --add item battery right \
+           --set battery update_freq=120 script="$PLUGIN_DIR/battery.sh" \
+           background.color=$default_background_color background.height=30 \
+           background.border_width=2 background.border_color=$default_border \
+           --subscribe battery system_woke power_source_change
+sketchybar --add item net right \
+           --set net script="$PLUGIN_DIR/net.sh" updates=on icon.color=0xff04a5e5 \
+           background.color=$default_background_color background.height=30 background.border_width=2 background.border_color=$default_border \
+           --subscribe net wifi_change
+
+sketchybar --add graph graph right 35 \
+           --set graph script="$PLUGIN_DIR/graph.sh" update_freq=1 \
+                 graph.fill_color=$default_white background.color=$default_background_color \
+                 background.border_color=$default_border background.border_width=2
+# sketchybar --add bracket utils volume battery net \
+#           --set utils background.color=$default_background_color \
+#                       background.corner_radius=15 \
+#                       background.height=30
+##### Force all scripts to run the first time (never do this in a script) #####
+
+sketchybar --add item settings-icon left \
+           --set settings-icon icon=􀍟 icon.color=$default_white click_script="open /System/Applications/System\ Settings.app" label.drawing=off \
+           --add item finder-icon left \
+           --set finder-icon icon=􀈕 icon.color=$default_white click_script="open -a Finder ~" label.drawing=off \
+           icon.padding_right=10 \
+           #--add item lockscreen-icon left \
+           #--set lockscreen-icon icon=􀎠 icon.color=$default_white click_script="pmset displaysleepnow" label.drawing=off icon.padding_right=10 \
+sketchybar --add bracket sfl-bracket settings-icon finder-icon lockscreen-icon \
+           --set sfl-bracket background.height=30 \
+           background.color=$default_background_color background.border_width=2 background.border_color=$default_border
+
+# sketchybar -m --add item btc right \
+#               --set btc icon= \
+#               --set btc update_freq=20 \
+#               --set btc script="~/.config/sketchybar/plugins/btc.sh"
+
+sketchybar --update
+
+#!/usr/bin/env lua
+
+#require("init")
